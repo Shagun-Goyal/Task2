@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🌤️ Weather & 📰 News Hub</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      overflow-x: hidden;
+    }
+    header {
+      background: linear-gradient(90deg, #0f0c29, #302b63, #24243e);
+      padding: 40px 20px 90px;
+      text-align: center;
+      border-bottom: 3px solid #00ffc3;
+      position: relative;
+      animation: fadeInDown 1s ease;
+    }
+    h1 {
+      font-size: 3rem;
+      color: #00ffc3;
+      margin: 0;
+      text-shadow: 2px 2px #000;
+    }
+    header p {
+      color: #ccc;
+      margin: 10px 0 0;
+      font-size: 1.1rem;
+    }
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .ticker {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: #000000d0;
+      overflow: hidden;
+      border-top: 2px solid #00ffc3;
+      border-bottom: 2px solid #00ffc3;
+      height: 45px;
+      display: flex;
+      align-items: center;
+      z-index: 10;
+    }
+    .ticker-content {
+      white-space: nowrap;
+      display: inline-block;
+      padding-left: 100%;
+      animation: scroll-left 25s linear infinite;
+    }
+    .ticker-content span {
+      margin-right: 80px;
+      color: #00ffc3;
+      font-weight: bold;
+    }
+    @keyframes scroll-left {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 30px;
+      padding: 30px;
+      animation: fadeIn 1s ease-in;
+    }
+    .card {
+      background: #1e1e2f;
+      padding: 25px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 255, 195, 0.2);
+      transition: transform 0.4s ease;
+    }
+    .card:hover {
+      transform: translateY(-10px) scale(1.02);
+    }
+    .card h2 {
+      margin-top: 0;
+      color: #ffd54f;
+    }
+    input, button {
+      padding: 12px;
+      margin-top: 10px;
+      border: none;
+      font-size: 1rem;
+      border-radius: 5px;
+    }
+    input {
+      width: 70%;
+      background-color: #2c2c2c;
+      color: #fff;
+    }
+    button {
+      background: linear-gradient(to right, #00ffc3, #00b3ff);
+      color: #000;
+      cursor: pointer;
+      transition: all 0.3s ease-in-out;
+    }
+    button:hover {
+      filter: brightness(1.2);
+      transform: scale(1.05);
+    }
+    .news-item {
+      margin-top: 10px;
+      border-top: 1px solid #444;
+      padding-top: 10px;
+      display: flex;
+      gap: 15px;
+      align-items: flex-start;
+    }
+    .news-item img {
+      width: 100px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    .news-text {
+      flex: 1;
+    }
+    .news-meta {
+      font-size: 0.8rem;
+      color: #ccc;
+      margin-top: 5px;
+    }
+    canvas {
+      margin-top: 20px;
+      max-width: 100%;
+      box-shadow: 0 0 20px rgba(0, 255, 195, 0.1);
+      border-radius: 10px;
+    }
+    .details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 20px;
+      background: #2a2a2a;
+      border-radius: 10px;
+      padding: 15px;
+    }
+    .details div {
+      background: #333;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+      transition: background 0.3s, transform 0.3s;
+    }
+    .details div:hover {
+      background: #444;
+      transform: scale(1.05);
+    }
+    .details div h4 {
+      margin: 0 0 5px;
+      color: #00ffc3;
+    }
+    .newsletter {
+      background: #1e1e2f;
+      margin: 30px;
+      text-align: center;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0, 255, 195, 0.15);
+      animation: fadeInUp 1s ease;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    footer {
+      text-align: center;
+      margin-top: 20px;
+      padding: 20px;
+      color: #bbb;
+      background: #141414;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🌤️ Weather & 📰 News Hub</h1>
+    <p>Your daily dose of weather and top headlines</p>
+    <div class="ticker">
+      <div class="ticker-content" id="tickerContent"></div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <h2>Weather Forecast</h2>
+      <div id="featuredCities" style="display: flex; gap: 20px; overflow-x: auto; padding-bottom: 10px;"></div>
+      <input type="text" id="weatherCity" placeholder="Enter city name" />
+      <button onclick="fetchWeather()">Get Forecast</button>
+      <div id="weatherResult"></div>
+      <canvas id="forecastChart"></canvas>
+      <div class="details" id="weatherDetails"></div>
+    </div>
+
+    <div class="card">
+      <h2>Top News</h2>
+      <input type="text" id="newsTopic" placeholder="Search news (e.g. technology)" />
+      <button onclick="fetchNews()">Get News</button>
+      <div id="newsResult"></div>
+    </div>
+  </div>
+
+  <div class="newsletter">
+    <h2>Subscribe to our Newsletter</h2>
+    <input type="email" placeholder="Enter your email" />
+    <button>📩 Subscribe</button>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Weather & News Hub. All rights reserved.</p>
+  </footer>
+
+  <script>
+    const uniqueCities = ["Reykjavik", "Phoenix", "Cherrapunji", "Dubai", "Chicago"];
+
+    async function loadFeaturedCities() {
+      const container = document.getElementById("featuredCities");
+      const apiKey = "YOUR_OPENWEATHERMAP_API_KEY"; // Replace with your key
+
+      for (const city of uniqueCities) {
+        try {
+          const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`);
+          const data = await res.json();
+          const icon = data.weather[0].icon;
+          const iconUrl = `https://openweathermap.org/img/wn/${icon}@2x.png`;
+          const temp = data.main.temp.toFixed(1);
+          const condition = data.weather[0].main;
+
+          const card = document.createElement("div");
+          card.style = `
+            background: #2c2c3a;
+            padding: 15px;
+            border-radius: 15px;
+            min-width: 160px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0,255,195,0.2);
+            flex-shrink: 0;
+            cursor: pointer;
+          `;
+
+          card.innerHTML = `
+            <h4 style="margin: 5px 0; color: #ffd54f;">${city}</h4>
+            <img src="${iconUrl}" alt="${condition}" width="60" height="60" />
+            <p style="margin: 5px 0; font-size: 1.2rem;">${temp}°C</p>
+            <p style="color: #ccc;">${condition}</p>
+          `;
+
+          card.onclick = () => {
+            document.getElementById("weatherCity").value = city;
+            fetchWeather();
+          };
+
+          container.appendChild(card);
+        } catch (e) {
+          console.warn("Failed to load:", city);
+        }
+      }
+    }
+
+    async function fetchNews() {
+      const topic = document.getElementById("newsTopic").value || "latest";
+      const apiKey = "0f9b4767dbb24c18a6c1ef325a640727";
+      const url = `https://newsapi.org/v2/everything?q=${topic}&apiKey=${apiKey}&pageSize=6`;
+      const res = await fetch(url);
+      const data = await res.json();
+
+      const container = document.getElementById("newsResult");
+      const ticker = document.getElementById("tickerContent");
+
+      if (data.status !== "ok") {
+        container.innerHTML = `<p style='color: red;'>${data.message}</p>`;
+        return;
+      }
+
+      container.innerHTML = data.articles.map(article => `
+        <div class="news-item">
+          <img src="${article.urlToImage || 'https://via.placeholder.com/100x60'}" alt="news image" />
+          <div class="news-text">
+            <strong><a href="${article.url}" target="_blank" style="color: #03dac6;">${article.title}</a></strong>
+            <p>${article.description || 'No description.'}</p>
+            <div class="news-meta">🕒 ${new Date(article.publishedAt).toLocaleString()}</div>
+          </div>
+        </div>
+      `).join('');
+
+      ticker.innerHTML = data.articles.map(a => `<span>${a.title}</span>`).join('');
+    }
+
+    async function fetchWeather() {
+      const city = document.getElementById("weatherCity").value;
+      const apiKey = "464f08eb3baea99071ed8ae41e36c5d7"; // Replace with your key
+      const url = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`;
+
+      const result = document.getElementById("weatherResult");
+      const details = document.getElementById("weatherDetails");
+      const ctx = document.getElementById("forecastChart").getContext("2d");
+
+      result.innerHTML = "🔄 Fetching weather...";
+      details.innerHTML = "";
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.cod !== "200") {
+          result.innerHTML = `<p style="color:red;">${data.message}</p>`;
+          return;
+        }
+
+        const cityName = data.city.name;
+        const country = data.city.country;
+        const current = data.list[0].main;
+        const wind = data.list[0].wind;
+        const weather = data.list[0].weather[0];
+        const iconUrl = `https://openweathermap.org/img/wn/${weather.icon}@4x.png`;
+
+        const temps = data.list.slice(0, 6).map(item => item.main.temp);
+        const times = data.list.slice(0, 6).map(item =>
+          new Date(item.dt_txt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        );
+
+        result.innerHTML = `
+          <div style="display: flex; gap: 20px; align-items: center; margin: 20px 0; animation: fadeInUp 0.8s ease;">
+            <img src="${iconUrl}" alt="Weather Icon" style="width: 100px; height: 100px;" />
+            <div>
+              <h3 style="margin: 0;">📍 ${cityName}, ${country}</h3>
+              <p style="font-size: 1.2rem;">${weather.main} — ${weather.description}</p>
+              <p style="font-size: 0.9rem; color: #ccc;">As of: ${new Date(data.list[0].dt_txt).toLocaleString()}</p>
+            </div>
+          </div>
+        `;
+
+        if (window.myChart) window.myChart.destroy();
+        window.myChart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: times,
+            datasets: [{
+              label: "Temperature (°C)",
+              data: temps,
+              backgroundColor: "#00ffc340",
+              borderColor: "#00ffc3",
+              fill: true,
+              tension: 0.4,
+              pointBackgroundColor: "#fff"
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { labels: { color: '#fff' } }
+            },
+            scales: {
+              x: { ticks: { color: '#ccc' } },
+              y: { ticks: { color: '#ccc' } }
+            }
+          }
+        });
+
+        details.innerHTML = `
+          <div><h4>Temp</h4>${current.temp} °C</div>
+          <div><h4>Feels Like</h4>${current.feels_like} °C</div>
+          <div><h4>Humidity</h4>${current.humidity}%</div>
+          <div><h4>Pressure</h4>${current.pressure} hPa</div>
+          <div><h4>Wind Speed</h4>${wind.speed} m/s</div>
+          <div><h4>Condition</h4>${weather.main}</div>
+        `;
+      } catch (err) {
+        result.innerHTML = `<p style="color:red;">Failed to fetch weather data.</p>`;
+      }
+    }
+
+    window.onload = () => {
+      fetchNews();
+      loadFeaturedCities();
+    };
+  </script>
+</body>
+</html>
