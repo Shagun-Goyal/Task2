@@ -223,15 +223,17 @@
   </footer>
 
   <script>
-    const uniqueCities = ["Reykjavik", "Phoenix", "Cherrapunji", "Dubai", "Chicago"];
+   const uniqueCities = ["Reykjavik", "Phoenix", "Cherrapunji", "Dubai", "Chicago"];
+    const proxy = "https://corsproxy.io/?";
+    const weatherApiKey = "464f08eb3baea99071ed8ae41e36c5d7"; // ✅ Your weather API key
+    const newsApiKey = "0f9b4767dbb24c18a6c1ef325a640727";
 
     async function loadFeaturedCities() {
       const container = document.getElementById("featuredCities");
-      const apiKey = "YOUR_OPENWEATHERMAP_API_KEY"; // Replace with your key
 
       for (const city of uniqueCities) {
         try {
-          const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`);
+          const res = await fetch(`${proxy}https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${weatherApiKey}&units=metric`);
           const data = await res.json();
           const icon = data.weather[0].icon;
           const iconUrl = `https://openweathermap.org/img/wn/${icon}@2x.png`;
@@ -271,8 +273,7 @@
 
     async function fetchNews() {
       const topic = document.getElementById("newsTopic").value || "latest";
-      const apiKey = "0f9b4767dbb24c18a6c1ef325a640727";
-      const url = `https://newsapi.org/v2/everything?q=${topic}&apiKey=${apiKey}&pageSize=6`;
+      const url = `https://newsapi.org/v2/everything?q=${topic}&apiKey=${newsApiKey}&pageSize=6`;
       const res = await fetch(url);
       const data = await res.json();
 
@@ -300,8 +301,7 @@
 
     async function fetchWeather() {
       const city = document.getElementById("weatherCity").value;
-      const apiKey = "464f08eb3baea99071ed8ae41e36c5d7"; // Replace with your key
-      const url = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`;
+      const url = `${proxy}https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${weatherApiKey}&units=metric`;
 
       const result = document.getElementById("weatherResult");
       const details = document.getElementById("weatherDetails");
